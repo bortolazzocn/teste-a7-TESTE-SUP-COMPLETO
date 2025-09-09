@@ -148,15 +148,63 @@
                                         <div class="property-field"><strong>Descrição:</strong> ${prop.description || 'Não informado'}</div>
                                     `;
                                     
-                                    // Adicionar características
-                                    if (prop.features && prop.features.length > 0) {
-                                        cardContent += `<div class="property-field"><strong>Características:</strong> ${prop.features.join(', ')}</div>`;
+                                    // Adicionar características (com tratamento para diferentes formatos)
+                                    if (prop.features) {
+                                        let featuresText = '';
+                                        
+                                        // Verificar se features é um array
+                                        if (Array.isArray(prop.features)) {
+                                            featuresText = prop.features.join(', ');
+                                        } 
+                                        // Verificar se features é uma string JSON
+                                        else if (typeof prop.features === 'string') {
+                                            try {
+                                                const parsedFeatures = JSON.parse(prop.features);
+                                                if (Array.isArray(parsedFeatures)) {
+                                                    featuresText = parsedFeatures.join(', ');
+                                                } else {
+                                                    featuresText = prop.features;
+                                                }
+                                            } catch (e) {
+                                                featuresText = prop.features;
+                                            }
+                                        } 
+                                        // Se for outro tipo, converter para string
+                                        else {
+                                            featuresText = String(prop.features);
+                                        }
+                                        
+                                        cardContent += `<div class="property-field"><strong>Características:</strong> ${featuresText || 'Não informado'}</div>`;
                                     }
                                     
-                                    // Adicionar imagens
-                                    if (prop.images && prop.images.length > 0) {
-                                        cardContent += `<div class="property-field"><strong>Imagens:</strong> ${prop.images.length} imagem(ns)</div>`;
-                                        prop.images.forEach((img, imgIndex) => {
+                                    // Adicionar imagens (com tratamento para diferentes formatos)
+                                    if (prop.images) {
+                                        let imagesArray = [];
+                                        
+                                        // Verificar se images é um array
+                                        if (Array.isArray(prop.images)) {
+                                            imagesArray = prop.images;
+                                        } 
+                                        // Verificar se images é uma string JSON
+                                        else if (typeof prop.images === 'string') {
+                                            try {
+                                                const parsedImages = JSON.parse(prop.images);
+                                                if (Array.isArray(parsedImages)) {
+                                                    imagesArray = parsedImages;
+                                                } else {
+                                                    imagesArray = [prop.images];
+                                                }
+                                            } catch (e) {
+                                                imagesArray = [prop.images];
+                                            }
+                                        } 
+                                        // Se for outro tipo, converter para string
+                                        else {
+                                            imagesArray = [String(prop.images)];
+                                        }
+                                        
+                                        cardContent += `<div class="property-field"><strong>Imagens:</strong> ${imagesArray.length} imagem(ns)</div>`;
+                                        imagesArray.forEach((img, imgIndex) => {
                                             cardContent += `<div class="property-field" style="margin-left: 120px;">${imgIndex + 1}. ${img}</div>`;
                                         });
                                     }
@@ -165,6 +213,13 @@
                                     if (prop.created_at) {
                                         cardContent += `<div class="property-field"><strong>Criado em:</strong> ${new Date(prop.created_at).toLocaleString()}</div>`;
                                     }
+                                    
+                                    // Adicionar tipo de cada campo para depuração
+                                    cardContent += `<div style="margin-top: 10px; font-size: 12px; color: #666;">`;
+                                    cardContent += `<div><strong>Tipos dos campos:</strong></div>`;
+                                    cardContent += `<div>features: ${typeof prop.features} (${Array.isArray(prop.features) ? 'array' : 'não array'})</div>`;
+                                    cardContent += `<div>images: ${typeof prop.images} (${Array.isArray(prop.images) ? 'array' : 'não array'})</div>`;
+                                    cardContent += `</div>`;
                                     
                                     card.innerHTML = cardContent;
                                     container.appendChild(card);
