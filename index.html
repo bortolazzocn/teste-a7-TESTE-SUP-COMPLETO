@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teste Supabase Completo</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0"></script>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        line-height: 1.6;
+    }
+    .log {
+        background-color: #f5f5f5;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        font-family: monospace;
+        white-space: pre-wrap;
+    }
+    .error {
+        color: red;
+    }
+    .success {
+        color: green;
+    }
+    button {
+        padding: 10px 15px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+    }
+    button:hover {
+        background-color: #45a049;
+    }
+    .property-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+        background-color: #f9f9f9;
+    }
+    .property-field {
+        margin: 5px 0;
+    }
+    .property-field strong {
+        display: inline-block;
+        width: 120px;
+    }
+</style>
+</head>
+<body>
+    <h1>Teste Completo do Supabase</h1>
+    
+    <div id="status">Aguardando início do teste...</div>
+    
+    <div id="logs"></div>
+    
+    <div id="properties-container"></div>
+    
+    <button id="testarBtn">Testar Conexão</button>
+    <button id="limparBtn">Limpar Logs</button>
+    
+    <script>
+        // Função para adicionar logs na tela
+        function addLog(message, isError = false) {
+            const logsDiv = document.getElementById('logs');
+            const logEntry = document.createElement('div');
+            logEntry.className = isError ? 'log error' : 'log';
+            logEntry.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            logsDiv.appendChild(logEntry);
+            console.log(message);
+        }
+        
+        // Função para atualizar o status
+        function updateStatus(message, isError = false) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = isError ? `<span class="error">${message}</span>` : `<span class="success">${message}</span>`;
+        }
+        
+        addLog('Iniciando teste completo...');
+        
+        // Inicializar o Supabase
+        const supabaseUrl = 'https://ipsdbztljaxrpsdnegxx.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwc2RienRsamF4cnBzZG5lZ3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0NDA0NzcsImV4cCI6MjA3MzAxNjQ3N30.df_2VwC3IxkiAgbQEM3_qYA-p_MGOD5Wyna7TN2008s';
+        
+        addLog('URL do Supabase: ' + supabaseUrl);
+        addLog('Chave do Supabase: ' + supabaseKey.substring(0, 20) + '...');
+        
+        // Carregar a biblioteca do Supabase dinamicamente
+        addLog('Carregando biblioteca do Supabase...');
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0';
+        script.onload = function() {
+            addLog('Biblioteca do Supabase carregada com sucesso!');
+            
+            try {
+                addLog('Tentando criar cliente Supabase...');
+                const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+                addLog('Cliente Supabase criado com sucesso!');
+                
+                // Adicionar evento ao botão
+                document.getElementById('testarBtn').addEventListener('click', async function() {
+                    updateStatus('Testando conexão...');
+                    addLog('Iniciando teste de conexão...');
+                    
+                    try {
+                        addLog('Tentando buscar dados da tabela properties...');
+                        
+                        const { data, error, count } = await supabase
+                            .from('properties')
+                            .select('*', { count: 'exact' });
+                        
+                        if (error) {
+                            addLog('Erro na consulta: ' + JSON.stringify(error), true);
+                            updateStatus('Erro na consulta: ' + error.message, true);
+                        } else {
+                            addLog('Consulta realizada com sucesso!');
+                            addLog('Quantidade de registros: ' + count);
+                            
+                            if (data && data.length > 0) {
+                                addLog('Registros encontrados:');
+                                
+                                const container = document.getElementById('properties-container');
+                                container.innerHTML = '';
+                                
+                                data.forEach((prop, index) => {
+                                    addLog(`Processando imóvel ${index + 1}: ${prop.title}`);
+                                    
+                                    // Criar card para o imóvel
+                                    const card = document.createElement('div');
+                                    card.className = 'property-card';
+                                    
+                                    // Adicionar todos os campos
+                                    let cardContent = `
+                                        <h3>${prop.title || 'Sem título'}</h3>
+                                        <div class="property-field"><strong>ID:</strong> ${prop.id}</div>
+                                        <div class="property-field"><strong>Preço:</strong> ${prop.price || 'Não informado'}</div>
+                                        <div class="property-field"><strong>Endereço:</strong> ${prop.address || 'Não informado'}</div>
+                                        <div class="property-field"><strong>Dormitórios:</strong> ${prop.bedrooms || 'Não informado'}</div>
+                                        <div class="property-field"><strong>Banheiros:</strong> ${prop.bathrooms || 'Não informado'}</div>
+                                        <div class="property-field"><strong>Área:</strong> ${prop.area ? prop.area + ' m²' : 'Não informado'}</div>
+                                        <div class="property-field"><strong>Vagas:</strong> ${prop.parking || 'Não informado'}</div>
+                                        <div class="property-field"><strong>Descrição:</strong> ${prop.description || 'Não informado'}</div>
+                                    `;
+                                    
+                                    // Adicionar características
+                                    if (prop.features && prop.features.length > 0) {
+                                        cardContent += `<div class="property-field"><strong>Características:</strong> ${prop.features.join(', ')}</div>`;
+                                    }
+                                    
+                                    // Adicionar imagens
+                                    if (prop.images && prop.images.length > 0) {
+                                        cardContent += `<div class="property-field"><strong>Imagens:</strong> ${prop.images.length} imagem(ns)</div>`;
+                                        prop.images.forEach((img, imgIndex) => {
+                                            cardContent += `<div class="property-field" style="margin-left: 120px;">${imgIndex + 1}. ${img}</div>`;
+                                        });
+                                    }
+                                    
+                                    // Adicionar data de criação
+                                    if (prop.created_at) {
+                                        cardContent += `<div class="property-field"><strong>Criado em:</strong> ${new Date(prop.created_at).toLocaleString()}</div>`;
+                                    }
+                                    
+                                    card.innerHTML = cardContent;
+                                    container.appendChild(card);
+                                    
+                                    // Adicionar log completo
+                                    addLog(`Imóvel ${index + 1} completo:`);
+                                    addLog(JSON.stringify(prop, null, 2));
+                                });
+                            } else {
+                                addLog('Nenhum registro encontrado na tabela properties');
+                                document.getElementById('properties-container').innerHTML = '<p>Nenhum imóvel encontrado.</p>';
+                            }
+                            
+                            updateStatus('Conexão bem-sucedida! Encontrados ' + count + ' registros.');
+                        }
+                    } catch (err) {
+                        addLog('Erro inesperado: ' + err.message, true);
+                        updateStatus('Erro inesperado: ' + err.message, true);
+                    }
+                });
+                
+                updateStatus('Clique em "Testar Conexão" para iniciar o teste.');
+            } catch (error) {
+                addLog('Erro ao criar cliente Supabase: ' + error.message, true);
+                updateStatus('Falha ao criar cliente Supabase', true);
+            }
+        };
+        
+        script.onerror = function() {
+            addLog('Erro ao carregar a biblioteca do Supabase', true);
+            updateStatus('Falha ao carregar biblioteca do Supabase', true);
+        };
+        
+        document.head.appendChild(script);
+        
+        // Event listener para o botão de limpar
+        document.getElementById('limparBtn').addEventListener('click', function() {
+            document.getElementById('logs').innerHTML = '';
+            document.getElementById('properties-container').innerHTML = '';
+            document.getElementById('status').innerHTML = 'Logs limpos. Clique em "Testar Conexão" para iniciar.';
+        });
+    </script>
+</body>
+</html>
